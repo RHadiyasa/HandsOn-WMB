@@ -2,6 +2,7 @@ package com.enigma.wmb.controller;
 
 import com.enigma.wmb.constant.Constant;
 import com.enigma.wmb.dto.request.MenuRequest;
+import com.enigma.wmb.dto.request.SearchMenuRequest;
 import com.enigma.wmb.dto.response.MenuResponse;
 import com.enigma.wmb.dto.response.PagingResponse;
 import com.enigma.wmb.service.MenuService;
@@ -30,10 +31,22 @@ public class MenuController {
     @GetMapping
     public ResponseEntity<?> getAllMenus(@RequestParam(name = "page", required = false, defaultValue = "1") Integer page,
                                          @RequestParam(name = "size", required = false, defaultValue = "10") Integer size,
-                                         @RequestParam(name = "sort", required = false) String sort) {
+                                         @RequestParam(name = "sort", required = false) String sortBy,
+                                         @RequestParam(name = "q", required = false) String query,
+                                         @RequestParam(name = "minPrice", required = false) Long minPrice,
+                                         @RequestParam(name = "maxPrice", required = false) Long maxPrice) {
         /*List<MenuResponse> menus = menuService.getAll();*/
-        Page<MenuResponse> menus = menuService.getAll(page, size, sort);
-        return ResponseUtil.buildResponse(HttpStatus.OK, "Success get all menus", menus);
+        SearchMenuRequest pageRequest = SearchMenuRequest.builder()
+                .page(page)
+                .size(size)
+                .sortBy(sortBy)
+                .query(query)
+                .minPrice(minPrice)
+                .maxPrice(maxPrice)
+                .build();
+
+        Page<MenuResponse> menus = menuService.getAll(pageRequest);
+        return ResponseUtil.buildResponse(HttpStatus.OK, "Success Get All Menus", menus);
     }
 
     @GetMapping(path = "/{id}")

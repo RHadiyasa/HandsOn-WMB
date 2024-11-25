@@ -2,15 +2,18 @@ package com.enigma.wmb.service.impl;
 
 import com.enigma.wmb.constant.MenuCategory;
 import com.enigma.wmb.dto.request.MenuRequest;
+import com.enigma.wmb.dto.request.SearchMenuRequest;
 import com.enigma.wmb.dto.response.MenuResponse;
 import com.enigma.wmb.entity.Menu;
 import com.enigma.wmb.repository.MenuRepository;
 import com.enigma.wmb.service.MenuService;
+import com.enigma.wmb.specification.MenuSpecification;
 import com.enigma.wmb.util.SortUtil;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Service;
@@ -55,21 +58,20 @@ public class MenuServiceImpl implements MenuService {
     }
 
     @Override
-    public Page<MenuResponse> getAll(Integer page, Integer size, String sort) {
-        if (page <= 0 ) page = 1;
-        // pageable adalah interface yang menampung value halaman `(page)` dan data yg ditampilkan `(size)`
-        // untuk membuat instance dari Pageable melalui implementasinya yaitu `PageRequest.of()`
+    public Page<MenuResponse> getAll(SearchMenuRequest searchMenuRequest) {
+        Sort sortBy = SortUtil.parseSort(searchMenuRequest.getSortBy());
+        Pageable pageable = PageRequest.of(searchMenuRequest.getPage(), searchMenuRequest.getSize(), sortBy);
+        Specification<Menu> specification = MenuSpecification.getSpecification(searchMenuRequest);
 
-        Sort sortBy = SortUtil.parseSort(sort);
-        Pageable pageable = PageRequest.of((page - 1), size, sortBy);
+        Page<Menu> menuPage = menuRepository.findAll(specification, pageable);
 
-        Page<Menu> menuPage = menuRepository.findAll(pageable);
         return menuPage.map(new Function<Menu, MenuResponse>() {
             @Override
             public MenuResponse apply(Menu menu) {
                 return toMenuResponse(menu);
             }
         });
+
     }
 
     @Override
